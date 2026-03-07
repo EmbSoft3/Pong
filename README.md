@@ -20,6 +20,18 @@ at the following address :
 | **Q** | Quit the application |
 | **CTRL+A** | Toogle auto-play mode |
 
+## Installation
+
+Build the application (see [Build](#build) below), then copy `pongGameRelease.elf` and its
+icon `mk_shell.bmp` to the Mk file system at:
+
+```
+mk/apps/pong/
+```
+
+This path corresponds to [`Mk/Storage/mk/apps/pong/`](https://github.com/EmbSoft3/Mk/tree/main/Mk/Storage/mk/apps/pong)
+in the Mk repository. Once installed, Pong appears in the Mk home screen application list.
+
 ## Build
 
 **Pong** can be built using the [makefile](Pong/Make/makefile) file on the repository.
@@ -41,12 +53,6 @@ Currently versions of compiler used are the followings:
 
 Please note, that by default, the application is compiled in release mode with
 optimizations enabled (**-Ofast**).
-
-## Installation and execution
-
-Copy the built `.elf` file and the [icon](Pong/Storage/) to the `mk/apps/pong` directory on the storage device (SD card or USB flash drive) used by the target board.
-
-Once Mk is running, **Pong** is installed by default. Click on the icon to run the application.
 
 ## License
 
