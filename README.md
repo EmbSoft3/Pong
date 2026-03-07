@@ -23,7 +23,7 @@ at the following address :
 ## Installation
 
 Build the application (see [Build](#build) below), then copy `pongGameRelease.elf` and its
-icon `mk_shell.bmp` to the Mk file system at:
+icon `mk_pong.bmp` to the Mk file system at:
 
 ```
 mk/apps/pong/
@@ -34,25 +34,43 @@ in the Mk repository. Once installed, Pong appears in the Mk home screen applica
 
 ## Build
 
-**Pong** can be built using the [makefile](Pong/Make/makefile) file on the repository.
+### Requirements
 
-The variable **TOOLCHAIN\_PATH** must be updated with the path of the ARM toolchain.
-The variable **INCLUDES\_API\_PATH** must be updated with the
-[include path](https://github.com/EmbSoft3/Mk/tree/main/Mk/Includes) of
-the **Mk** operating system.
+- [GNU Arm Embedded Toolchain 10.3-2021.10](https://developer.arm.com/downloads/-/gnu-rm)
+- GNU Make 4.x
+- [Mk Includes](https://github.com/EmbSoft3/Mk/tree/main/Mk/Includes)
 
-First, issue a **make clean** command then build the target with **make all**.
+### Steps
 
-Currently versions of compiler used are the followings:
+1. Open `Pong/Make/makefile` and set:
+   - `TOOLCHAIN_PATH` — path to your ARM toolchain `bin/` directory
+   - `INCLUDES_API_PATH` — path to the Mk [`Includes/`](https://github.com/EmbSoft3/Mk/tree/main/Mk/Includes) directory
 
-* **gcc** arm-none-eabi-gcc (GNU Arm Embedded Toolchain 10.3-2021.10) 10.3.1
-  20210824 (release)
-* **g++** arm-none-eabi-g++ (GNU Arm Embedded Toolchain 10.3-2021.10) 10.3.1
-  20210824 (release)
-* **make** GNU Make 4.4.1 Built for Windows32
+2. Build:
 
-Please note, that by default, the application is compiled in release mode with
-optimizations enabled (**-Ofast**).
+```
+make clean
+make all
+```
+
+This produces `pongGameRelease.elf`, ready to install on the target.
+
+> Use the `Debug` target for a `-O0` build with full debug symbols:
+> ```
+> make Debug
+> ```
+
+The application is compiled as a position-independent shared object (`-fPIC -shared`) and is relocatable into any 64 KB SDRAM page by the Mk dynamic loader.
+
+### Compiler versions
+
+| Tool | Version |
+|------|---------|
+| `arm-none-eabi-gcc` | 10.3.1 20210824 (GNU Arm Embedded Toolchain 10.3-2021.10) |
+| `arm-none-eabi-g++` | 10.3.1 20210824 (GNU Arm Embedded Toolchain 10.3-2021.10) |
+| `make` | GNU Make 4.4.1 (Windows32) |
+
+---
 
 ## License
 
