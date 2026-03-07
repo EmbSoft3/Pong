@@ -2,9 +2,9 @@
 # Path
 ################################################################################
 
-SOURCES_PATH := ../src
-INCLUDES_PATH := ../include
-INCLUDES_API_PATH := ../../Mk/Mk/Includes
+SOURCES_PATH := ../Sources
+INCLUDES_PATH := ../Includes
+INCLUDES_API_PATH := ../../../Mk/Mk/Includes
 WORKING_DIRECTORY_PATH := .
 
 ################################################################################
