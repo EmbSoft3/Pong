@@ -42,6 +42,12 @@ Currently versions of compiler used are the followings:
 Please note, that by default, the application is compiled in release mode with
 optimizations enabled (**-Ofast**).
 
+## Installation and execution
+
+Copy the built `.elf` file and the [icon](Pong/Storage/mk_pong.bmp) to the `mk/apps/pong` directory on the storage device (SD card or USB flash drive) used by the target board.
+
+Once Mk is running, **Pong** is installed by default. Click on the icon to run the application.
+
 ## License
 
 **Copyright (C)** 2024 **RENARD Mathieu**. All rights reserved.
