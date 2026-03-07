@@ -44,7 +44,7 @@ optimizations enabled (**-Ofast**).
 
 ## Installation and execution
 
-Copy the built `.elf` file and the [icon](Pong/Storage/mk_pong.bmp) to the `mk/apps/pong` directory on the storage device (SD card or USB flash drive) used by the target board.
+Copy the built `.elf` file and the [icon](Pong/Storage/) to the `mk/apps/pong` directory on the storage device (SD card or USB flash drive) used by the target board.
 
 Once Mk is running, **Pong** is installed by default. Click on the icon to run the application.
 
