@@ -1,1 +1,1 @@
-This directory contains the application's resources and programming file.
+This directory contains the application's resources and the program file.
