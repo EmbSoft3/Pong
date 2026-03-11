@@ -1,0 +1,85 @@
+name: Build ARM Firmware
+
+# -----------------------------------------------------------------------------
+# Workflow triggers
+# -----------------------------------------------------------------------------
+# - Runs automatically on push to the main branch
+# - Runs on pull requests targeting main and STM32F746G-DISCO_REV.C
+# - Can also be triggered manually from the GitHub Actions UI
+# -----------------------------------------------------------------------------
+on:
+  push:
+    branches: 
+      - main
+  pull_request:
+    branches: 
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Firmware
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # -----------------------------------------------------------------------
+      # Step 1 - Checkout the current repository
+      # Retrieves the project source code so the workflow can build it.
+      # -----------------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      # -----------------------------------------------------------------------
+      # Step 2 - Download only the required part of the Mk repository
+      # We use sparse checkout to download only Mk/Includes instead of the
+      # full repository. This reduces network usage and speeds up CI.
+      # -----------------------------------------------------------------------
+      - name: Sparse checkout Mk/Includes
+        run: |
+          git clone --no-checkout https://github.com/EmbSoft3/Mk.git Mk
+          cd Mk
+          git sparse-checkout init --cone
+          git sparse-checkout set Mk/Includes
+          git checkout
+
+      # -----------------------------------------------------------------------
+      # Step 3 - Install the ARM GCC toolchain
+      # Installs the ARM GNU compiler used to build the firmware.
+      # Version used: 10.3-2021.10
+      # -----------------------------------------------------------------------
+      - name: Install Arm GNU Toolchain (arm-none-eabi-gcc)
+        uses: carlosperate/arm-none-eabi-gcc-action@v1
+        with:
+          release: "10.3-2021.10"
+
+      # -----------------------------------------------------------------------
+      # Step 4 - Build the firmware using the Makefile
+      # - Cleans previous build artifacts
+      # - Compiles the project
+      # - Passes the Mk includes directory to the Makefile
+      # -----------------------------------------------------------------------
+      - name: Build using Makefile
+        run: |
+          echo "Workspace = $GITHUB_WORKSPACE"
+          cd BlinkLed/Make/
+          make clean
+          make all MK_INCLUDES="$GITHUB_WORKSPACE/Mk/Mk/Includes"
+
+      # -----------------------------------------------------------------------
+      # Step 5 - Upload build artifacts
+      # Uploads the generated firmware files (.elf and .map) so they can be
+      # downloaded from the GitHub Actions interface.
+      #
+      # The step is skipped when running locally with "act" because artifact
+      # upload requires the GitHub runtime environment.
+      # -----------------------------------------------------------------------
+      - name: Upload build artifacts
+        if: ${{ !env.ACT }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: firmware
+          path: |
+            **/*.elf
+            **/*.map
+            
