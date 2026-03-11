@@ -62,7 +62,7 @@ jobs:
       - name: Build using Makefile
         run: |
           echo "Workspace = $GITHUB_WORKSPACE"
-          cd BlinkLed/Make/
+          cd Pong/Make/
           make clean
           make all MK_INCLUDES="$GITHUB_WORKSPACE/Mk/Mk/Includes"
 
