@@ -111,7 +111,7 @@ PRINT  := @arm-none-eabi-size
 # Artefacts
 ################################################################################
 
-BUILD_ARTIFACT_NAME      := blinkLedRelease
+BUILD_ARTIFACT_NAME      := pongGameRelease
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT           := $(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
 
