@@ -1,0 +1,37 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Pong (DISCO)",
+      "type": "cortex-debug",
+      "request": "launch",
+      "servertype": "jlink",
+      "device": "STM32F746NG",
+      "interface": "SWD",
+      "speed": 4000,
+      "executable": "../Mk/build/debug-disco/Mk.elf",
+      "loadFiles": [],
+      "postLaunchCommands": [
+        "set mem inaccessible-by-default off",
+        "add-symbol-file ./build/debug-pong/pong.elf -o 0xc045C000"
+      ],
+      "runToEntryPoint": "mk_pong_main"
+    },
+    {
+      "name": "Debug Pong (EVAL2)",
+      "type": "cortex-debug",
+      "request": "launch",
+      "servertype": "jlink",
+      "device": "STM32F746NG",
+      "interface": "SWD",
+      "speed": 4000,
+      "executable": "../Mk/build/debug-eval2/Mk.elf",
+      "loadFiles": [],
+      "postLaunchCommands": [
+        "set mem inaccessible-by-default off",
+        "add-symbol-file ./build/debug-pong/pong.elf -o 0xc13C0000"
+      ],
+      "runToEntryPoint": "mk_pong_main"
+    }
+  ]
+}

@@ -53,7 +53,7 @@ FIND_DIRS = $(shell $(FIND) $(1) -mindepth 1 -type d)
 
 SOURCES_PATH           := ../Sources
 INCLUDES_PATH          := ../Includes
-INCLUDES_API_PATH      := ../../Mk/Mk/Includes
+INCLUDES_API_PATH      := ../../../Mk/Mk/Includes
 WORKING_DIRECTORY_PATH := .
 
 ################################################################################

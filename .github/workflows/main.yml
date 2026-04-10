@@ -4,22 +4,29 @@ name: Build ARM Firmware
 # Workflow triggers
 # -----------------------------------------------------------------------------
 # - Runs automatically on push to the main branch
-# - Runs on pull requests targeting main and STM32F746G-DISCO_REV.C
+# - Runs on pull requests targeting main
 # - Can also be triggered manually from the GitHub Actions UI
 # -----------------------------------------------------------------------------
 on:
   push:
-    branches: 
-      - main
+    branches:
+      - '**'
   pull_request:
-    branches: 
-      - main
+    branches:
+      - '**'
   workflow_dispatch:
 
 jobs:
   build:
-    name: Build Firmware
+    name: ${{ matrix.preset }}
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false   # les autres builds continuent si l'un échoue
+      matrix:
+        preset:
+          - release-pong
+          - debug-pong
 
     steps:
 
@@ -28,7 +35,7 @@ jobs:
       # Retrieves the project source code so the workflow can build it.
       # -----------------------------------------------------------------------
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       # -----------------------------------------------------------------------
       # Step 2 - Download only the required part of the Mk repository
@@ -54,32 +61,44 @@ jobs:
           release: "10.3-2021.10"
 
       # -----------------------------------------------------------------------
-      # Step 4 - Build the firmware using the Makefile
-      # - Cleans previous build artifacts
-      # - Compiles the project
-      # - Passes the Mk includes directory to the Makefile
+      # Step 4 - Install CMake and Ninja
+      # Installs CMAke and Ninja toolkit.
+      # Version used: latest
       # -----------------------------------------------------------------------
-      - name: Build using Makefile
+      - name: Install dependencies
         run: |
-          echo "Workspace = $GITHUB_WORKSPACE"
-          cd Pong/Make/
-          make clean
-          make all MK_INCLUDES="$GITHUB_WORKSPACE/Mk/Mk/Includes"
+          sudo apt-get update -qq
+          sudo apt-get install -y \
+            ninja-build \
+            cmake
 
       # -----------------------------------------------------------------------
-      # Step 5 - Upload build artifacts
-      # Uploads the generated firmware files (.elf and .map) so they can be
-      # downloaded from the GitHub Actions interface.
+      # Step 5 - Configure
+      # -----------------------------------------------------------------------
+      - name: Configure (${{ matrix.preset }})
+        run: cmake --preset ${{ matrix.preset }} -DINCLUDES_API_PATH=${{ github.workspace }}/Mk/Mk/Includes
+
+      # -----------------------------------------------------------------------
+      # Step 6 - Build the firmware 
+      # -----------------------------------------------------------------------
+      - name: Build (${{ matrix.preset }})
+        run: cmake --build --preset ${{ matrix.preset }}
+
+      # -----------------------------------------------------------------------
+      # Step 7 - Upload build artifacts
+      # Uploads the generated firmware files (.elf, .map, .srec) so they can
+      # be downloaded from the GitHub Actions interface.
       #
       # The step is skipped when running locally with "act" because artifact
       # upload requires the GitHub runtime environment.
       # -----------------------------------------------------------------------
-      - name: Upload build artifacts
+      - name: Upload artifacts (${{ matrix.preset }})
         if: ${{ !env.ACT }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
-          name: firmware
+          name: ${{ matrix.preset }}
           path: |
-            **/*.elf
-            **/*.map
-            
+            build/${{ matrix.preset }}/*.elf
+            build/${{ matrix.preset }}/*.map
+          if-no-files-found: error
+      
