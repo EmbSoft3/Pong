@@ -39,119 +39,226 @@
  */
 
 /**
- * @def K_MK_PONG_FIELD_SCORE_J1_POSITION_X
- * @brief Définition de position sur l'axe 'x' du champ 'Score J1'.
+ * @def K_MK_PONG_FIELD_640_480_SCORE_J1_POSITION_X
+ * @brief Définition de position sur l'axe 'x' du champ 'Score J1' (résolution 640x480).
  */
 
 
-#define K_MK_PONG_FIELD_SCORE_J1_POSITION_X 350
+#define K_MK_PONG_FIELD_640_480_SCORE_J1_POSITION_X 350
 
 /**
- * @def K_MK_PONG_FIELD_SCORE_J1_POSITIONY
- * @brief Définition de position sur l'axe 'y' du champ 'Score J1'.
+ * @def K_MK_PONG_FIELD_640_480_SCORE_J1_POSITION_Y
+ * @brief Définition de position sur l'axe 'y' du champ 'Score J1' (résolution 640x480).
  */
 
-#define K_MK_PONG_FIELD_SCORE_J1_POSITION_Y 45
+#define K_MK_PONG_FIELD_640_480_SCORE_J1_POSITION_Y 45
 
 /**
- * @def K_MK_PONG_FIELD_SCORE_J1_WIDTH_POSITIONY
- * @brief Définition de la largeur du champ 'Score J1'.
+ * @def K_MK_PONG_FIELD_640_480_SCORE_J1_WIDTH
+ * @brief Définition de la largeur du champ 'Score J1' (résolution 640x480).
  */
 
-#define K_MK_PONG_FIELD_SCORE_J1_WIDTH 120
+#define K_MK_PONG_FIELD_640_480_SCORE_J1_WIDTH 120
 
 /**
- * @def K_MK_PONG_FIELD_SCORE_J1_WIDTH_POSITIONY
- * @brief Définition de la hauteur du champ 'Score J1'.
+ * @def K_MK_PONG_FIELD_640_480_SCORE_J1_HEIGHT
+ * @brief Définition de la hauteur du champ 'Score J1' (résolution 640x480).
  */
 
-#define K_MK_PONG_FIELD_SCORE_J1_HEIGHT 100
-
-/**
- *
- */
-
-/**
- * @def K_MK_PONG_FIELD_SCORE_J2_POSITION_X
- * @brief Définition de position sur l'axe 'x' du champ 'Score J2'.
- */
-
-
-#define K_MK_PONG_FIELD_SCORE_J2_POSITION_X 170
-
-/**
- * @def K_MK_PONG_FIELD_SCORE_J2_POSITIONY
- * @brief Définition de position sur l'axe 'y' du champ 'Score J2'.
- */
-
-#define K_MK_PONG_FIELD_SCORE_J2_POSITION_Y 45
-
-/**
- * @def K_MK_PONG_FIELD_SCORE_J2_WIDTH_POSITIONY
- * @brief Définition de la largeur du champ 'Score J2'.
- */
-
-#define K_MK_PONG_FIELD_SCORE_J2_WIDTH 120
-
-/**
- * @def K_MK_PONG_FIELD_SCORE_J2_WIDTH_POSITIONY
- * @brief Définition de la hauteur du champ 'Score J2'.
- */
-
-#define K_MK_PONG_FIELD_SCORE_J2_HEIGHT 100
+#define K_MK_PONG_FIELD_640_480_SCORE_J1_HEIGHT 100
 
 /**
  *
  */
 
 /**
- * @def K_MK_PONG_FIELD_MAIN_MENU_POSITION_X
- * @brief Définition de position sur l'axe 'x' du menu principal.
+ * @def K_MK_PONG_FIELD_640_480_SCORE_J2_POSITION_X
+ * @brief Définition de position sur l'axe 'x' du champ 'Score J2' (résolution 640x480).
  */
 
-#define K_MK_PONG_FIELD_MAIN_MENU_POSITION_X 350
+#define K_MK_PONG_FIELD_640_480_SCORE_J2_POSITION_X 170
 
 /**
- * @def K_MK_PONG_FIELD_MAIN_MENU_POSITION_Y
- * @brief Définition de position sur l'axe 'y' du menu principal.
+ * @def K_MK_PONG_FIELD_640_480_SCORE_J2_POSITION_Y
+ * @brief Définition de position sur l'axe 'y' du champ 'Score J2' (résolution 640x480).
  */
 
-#define K_MK_PONG_FIELD_MAIN_MENU_POSITION_Y 270
+#define K_MK_PONG_FIELD_640_480_SCORE_J2_POSITION_Y 45
 
 /**
- * @def K_MK_PONG_FIELD_MAIN_MENU_HEIGHT
- * @brief Définition de la largeur de la bordure.
+ * @def K_MK_PONG_FIELD_640_480_SCORE_J2_WIDTH
+ * @brief Définition de la largeur du champ 'Score J2' (résolution 640x480).
+ */
+
+#define K_MK_PONG_FIELD_640_480_SCORE_J2_WIDTH 120
+
+/**
+ * @def K_MK_PONG_FIELD_640_480_SCORE_J2_HEIGHT
+ * @brief Définition de la hauteur du champ 'Score J2' (résolution 640x480).
+ */
+
+#define K_MK_PONG_FIELD_640_480_SCORE_J2_HEIGHT 100
+
+/**
+ *
+ */
+
+/**
+ * @def K_MK_PONG_FIELD_640_480_MAIN_MENU_POSITION_X
+ * @brief Définition de position sur l'axe 'x' du menu principal (résolution 640x480).
+ */
+
+#define K_MK_PONG_FIELD_640_480_MAIN_MENU_POSITION_X 350
+
+/**
+ * @def K_MK_PONG_FIELD_640_480_MAIN_MENU_POSITION_Y
+ * @brief Définition de position sur l'axe 'y' du menu principal (résolution 640x480).
+ */
+
+#define K_MK_PONG_FIELD_640_480_MAIN_MENU_POSITION_Y 270
+
+/**
+ * @def K_MK_PONG_FIELD_640_480_MAIN_MENU_BUTTON_WIDTH
+ * @brief Définition de la largeur des boutons du menu (résolution 640x480).
+ */
+
+#define K_MK_PONG_FIELD_640_480_MAIN_MENU_BUTTON_WIDTH 240
+
+/**
+ * @def K_MK_PONG_FIELD_640_480_MAIN_MENU_BUTTON_HEIGHT
+ * @brief Définition de la hauteur des boutons du menu (résolution 640x480).
+ */
+
+#define K_MK_PONG_FIELD_640_480_MAIN_MENU_BUTTON_HEIGHT 80
+
+/**
+ * @def K_MK_PONG_FIELD_640_480_MAIN_MENU_BUTTON_GAP
+ * @brief Définition de l'espace entre cheque bouton (résolution 640x480).
+ */
+
+#define K_MK_PONG_FIELD_640_480_MAIN_MENU_BUTTON_GAP 10
+
+/**
+ *
+ */
+
+/**
+ * @def K_MK_PONG_FIELD_480_272_SCORE_J1_POSITION_X
+ * @brief Définition de position sur l'axe 'x' du champ 'Score J1' (résolution 480x272).
+ */
+
+
+#define K_MK_PONG_FIELD_480_272_SCORE_J1_POSITION_X 225
+
+/**
+ * @def K_MK_PONG_FIELD_480_272_SCORE_J1_POSITION_Y
+ * @brief Définition de position sur l'axe 'y' du champ 'Score J1' (résolution 480x272).
+ */
+
+#define K_MK_PONG_FIELD_480_272_SCORE_J1_POSITION_Y 0
+
+/**
+ * @def K_MK_PONG_FIELD_480_272_SCORE_J1_WIDTH
+ * @brief Définition de la largeur du champ 'Score J1' (résolution 480x272).
+ */
+
+#define K_MK_PONG_FIELD_480_272_SCORE_J1_WIDTH 120
+
+/**
+ * @def K_MK_PONG_FIELD_480_272_SCORE_J1_HEIGHT
+ * @brief Définition de la hauteur du champ 'Score J1' (résolution 480x272).
+ */
+
+#define K_MK_PONG_FIELD_480_272_SCORE_J1_HEIGHT 100
+
+/**
+ *
+ */
+
+/**
+ * @def K_MK_PONG_FIELD_480_272_SCORE_J2_POSITION_X
+ * @brief Définition de position sur l'axe 'x' du champ 'Score J2' (résolution 480x272).
+ */
+
+#define K_MK_PONG_FIELD_480_272_SCORE_J2_POSITION_X 140
+
+/**
+ * @def K_MK_PONG_FIELD_480_272_SCORE_J2_POSITIONY
+ * @brief Définition de position sur l'axe 'y' du champ 'Score J2' (résolution 480x272).
+ */
+
+#define K_MK_PONG_FIELD_480_272_SCORE_J2_POSITION_Y 0
+
+/**
+ * @def K_MK_PONG_FIELD_480_272_SCORE_J2_WIDTH
+ * @brief Définition de la largeur du champ 'Score J2' (résolution 480x272).
+ */
+
+#define K_MK_PONG_FIELD_480_272_SCORE_J2_WIDTH 120
+
+/**
+ * @def K_MK_PONG_FIELD_480_272_SCORE_J2_HEIGHT
+ * @brief Définition de la hauteur du champ 'Score J2' (résolution 480x272).
+ */
+
+#define K_MK_PONG_FIELD_480_272_SCORE_J2_HEIGHT 100
+
+/**
+ *
+ */
+
+/**
+ * @def K_MK_PONG_FIELD_480_272_MAIN_MENU_POSITION_X
+ * @brief Définition de position sur l'axe 'x' du menu principal (résolution 480x272).
+ */
+
+#define K_MK_PONG_FIELD_480_272_MAIN_MENU_POSITION_X 230
+
+/**
+ * @def K_MK_PONG_FIELD_480_272_MAIN_MENU_POSITION_Y
+ * @brief Définition de position sur l'axe 'y' du menu principal (résolution 480x272).
+ */
+
+#define K_MK_PONG_FIELD_480_272_MAIN_MENU_POSITION_Y 85
+
+/**
+ * @def K_MK_PONG_FIELD_480_272_MAIN_MENU_BUTTON_WIDTH
+ * @brief Définition de la largeur des boutons du menu (résolution 480x272).
+ */
+
+#define K_MK_PONG_FIELD_480_272_MAIN_MENU_BUTTON_WIDTH 240
+
+/**
+ * @def K_MK_PONG_FIELD_480_272_MAIN_MENU_BUTTON_HEIGHT
+ * @brief Définition de la hauteur des boutons du menu (résolution 480x272).
+ */
+
+#define K_MK_PONG_FIELD_480_272_MAIN_MENU_BUTTON_HEIGHT 80
+
+/**
+ * @def K_MK_PONG_FIELD_480_272_MAIN_MENU_BUTTON_GAP
+ * @brief Définition de l'espace entre cheque bouton (résolution 480x272).
+ */
+
+#define K_MK_PONG_FIELD_480_272_MAIN_MENU_BUTTON_GAP 10
+
+/**
+ *
+ */
+
+/**
+ * @def K_MK_PONG_FIELD_MAIN_MENU_BORDER_WIDTH
+ * @brief Définition de la largeur de la bordure (résolution 640x480).
  */
 
 #define K_MK_PONG_FIELD_MAIN_MENU_BORDER_WIDTH 4.0f
 
 /**
- * @def K_MK_PONG_FIELD_MAIN_MENU_WIDTH
- * @brief Définition de la largeur des boutons du menu.
- */
-
-#define K_MK_PONG_FIELD_MAIN_MENU_BUTTON_WIDTH 240
-
-/**
- * @def K_MK_PONG_FIELD_MAIN_MENU_HEIGHT
- * @brief Définition de la hauteur des boutons du menu.
- */
-
-#define K_MK_PONG_FIELD_MAIN_MENU_BUTTON_HEIGHT 80
-
-/**
- * @def K_MK_PONG_FIELD_MAIN_MENU_BUTTON_GAP
- * @brief Définition de l'espace entre cheque bouton.
- */
-
-#define K_MK_PONG_FIELD_MAIN_MENU_BUTTON_GAP 10
-
-/**
  *
  */
 
 /**
- * @def K_MK_PONG_FIELD_SCORE_J2_WIDTH_POSITIONY
+ * @def K_MK_PONG_FIELD_FONT_HEIGHT
  * @brief Définition de la hauteur de la police de caractères
  *        customisée [en pxl].
  */
