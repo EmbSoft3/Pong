@@ -1,6 +1,6 @@
 /**
 *
-* @copyright Mk - Copyright (C) 2017-2018 RENARD Mathieu.
+* @copyright Mk - Copyright (C) 2017-2026 RENARD Mathieu.
 *
 * This file is part of Mk.
 *
@@ -148,7 +148,7 @@
  */
 
 
-#define K_MK_PONG_FIELD_480_272_SCORE_J1_POSITION_X 225
+#define K_MK_PONG_FIELD_480_272_SCORE_J1_POSITION_X 250
 
 /**
  * @def K_MK_PONG_FIELD_480_272_SCORE_J1_POSITION_Y
@@ -180,7 +180,7 @@
  * @brief Définition de position sur l'axe 'x' du champ 'Score J2' (résolution 480x272).
  */
 
-#define K_MK_PONG_FIELD_480_272_SCORE_J2_POSITION_X 140
+#define K_MK_PONG_FIELD_480_272_SCORE_J2_POSITION_X 110
 
 /**
  * @def K_MK_PONG_FIELD_480_272_SCORE_J2_POSITIONY
@@ -354,7 +354,26 @@
  * @brief Définition de la hauteur des zones mortes [en pxl].
  */
 
-#define K_MK_PONG_DEAD_ZONE_HEIGHT 25
+#define K_MK_PONG_DEAD_ZONE_HEIGHT 0
+
+/**
+ *
+ */
+
+/**
+ * @def K_MK_PONG_ANGLE_MIN_DEG
+ * @brief Définition de l'angle horizontal minimum [en degrés].
+ */
+
+#define K_MK_PONG_ANGLE_MIN_DEG  22.5f
+
+/**
+ * @def K_MK_PONG_ANGLE_MIN_DEG
+ * @brief Définition de l'angle horizontal maximum [en degrés].
+ */
+
+
+#define K_MK_PONG_ANGLE_MAX_DEG  67.5f 
 
 /**
  *

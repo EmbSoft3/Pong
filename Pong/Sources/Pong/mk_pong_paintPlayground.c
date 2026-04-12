@@ -1,6 +1,6 @@
 /**
 *
-* @copyright Mk - Copyright (C) 2017-2019 RENARD Mathieu.
+* @copyright Mk - Copyright (C) 2017-2026 RENARD Mathieu.
 *
 * This file is part of Mk.
 *
@@ -120,45 +120,71 @@ static void mk_pong_setWinner ( T_mkPongApplication* p_pong )
  * @endinternal
  */
 
-static void mk_pong_setDelta ( T_mkPongApplication* p_pong, T_mkPongPlayer* p_player )
+static void mk_pong_handleRacketBounce ( T_mkPongApplication* p_pong, T_mkPongPlayer* p_player, float32_t p_impactY, float32_t p_dxSign )
 {
-   /* Déclaration des variables de travail */
-   float32_t l_hypothenuse = 0.0f, l_multiplier = -1.0f, l_delta = 0.0f;
-   float32_t l_teta = 0.0f, l_alpha = 0.0f;
+   float32_t l_delta;    /* Position d'impact relative sur la raquette [0 ; H_racket] */
+   float32_t l_teta;     /* Angle vertical [0° ; 180°] */
+   float32_t l_alpha;    /* Angle horizontal de sortie [0° ; 90°] (valeur absolue) */
+   float32_t l_dySign;   /* Signe de la composante verticale après rebond */
+   float32_t l_mag;      /* Norme du vecteur direction avant rebond */
 
-   /* Si l'origine de la balle est en dehors de la raquette (partie basse) */
-   if ( p_pong->playground.ball.position.y < p_player->racket.y )
+   /* Position d'impact normalisée sur la raquette */
+   /* p_impactY est le centre de la balle au moment du contact. */
+   /* l_delta est la distance entre le haut de la raquette et ce centre. */
+   /* Elle est clampée dans [0 ; RACKET_HEIGHT] pour couvrir les cas limites */
+   /* (balle frôlant un bord de la raquette). */
+   l_delta = p_impactY - p_player->racket.y;
+
+   /* Si l'impact est en dessous de la raquette */
+   if ( l_delta < 0.0f )
    {
-      /* On considére que le delta est nul */
       l_delta = 0.0f;
    }
 
-   /* Sinon si l'origine de la balle est en dehors de la raquette (partie haute) */
-   else if ( p_pong->playground.ball.position.y > ( p_player->racket.y + K_MK_PONG_RACKET_HEIGHT ) )
+   /* Si l'impact est au dessus de la raquette */
+   else if ( l_delta > ( float32_t ) K_MK_PONG_RACKET_HEIGHT )
    {
-      /* On considére que le delta est max */
-      l_delta = K_MK_PONG_RACKET_HEIGHT;
+      l_delta = ( float32_t ) K_MK_PONG_RACKET_HEIGHT;
    }
 
    /* Sinon */
    else
    {
-      /* On calcule le delta */
-      l_delta = p_pong->playground.ball.position.y - p_player->racket.y;
+      /* Ne rien faire */
    }
+   
+   /* Conversion en angles */
+   /* teta ∈ [0° ; 180°] : position sur la raquette vue comme un arc. */
+   /*   - 0°   → haut de la raquette */
+   /*   - 90°  → centre */
+   /*   - 180° → bas */
+   /* alpha = |90° − teta| : angle horizontal de sortie. */
+   /*   - Frappe au centre  → alpha = 0°  (trajectoire plate, sera clampée) */
+   /*   - Frappe en haut    → alpha = 90° (trajectoire verticale, sera clampée) */
+   /*   - Frappe en bas     → alpha = 90° (idem, trajectoire vers le bas) */
+   l_teta  = ( l_delta * 180.0f ) / ( float32_t ) K_MK_PONG_RACKET_HEIGHT;
+   l_alpha = 90.0f - l_teta;
 
-   /* Détermination de l'angle de la balle suite au rebond sur la raquette */
-   l_teta = ( l_delta * 180.0f ) / K_MK_PONG_RACKET_HEIGHT; /* Axe vertical entre 0 et 180° */
-   l_alpha = 90.0f - l_teta;                                /* Axe horizontal entre 0 et 90° */
+   /* Le signe de alpha détermine si la balle monte ou descend */
+   l_dySign = ( l_alpha < 0.0f ) ? 1.0f : -1.0f;    /* +1 = vers le bas écran */
+   l_alpha  = _math_vabs ( l_alpha );               /* On travaille en valeur absolue */
 
-   /* Si l'angle est supérieur à 90° */
-   if ( l_teta > 90.0f )
+
+   /* Clampage de l'angle */
+   /* On limite alpha entre ANGLE_MIN et ANGLE_MAX pour éviter : */
+   /*   - Les trajectoires trop horizontales (alpha < 22.5°) : la balle ferait des aller-retours interminables sans avancer verticalement. */
+   /*   - Les trajectoires trop verticales (alpha > 67.5°) : la balle serait impossible à suivre. */
+   
+   /* Si clampage MIN */
+   if ( l_alpha < K_MK_PONG_ANGLE_MIN_DEG )
    {
-      /* Réalisation d'un changement de signe */
-      l_alpha = -l_alpha;
-
-      /* La trajectoire de la balle est vers le bas de l'écran, la variation sur l'axe 'y' doit être positive. */
-      l_multiplier = 1;
+      l_alpha = K_MK_PONG_ANGLE_MIN_DEG;
+   }
+   
+   /* Sinon si clampage MAX*/
+   else if ( l_alpha > K_MK_PONG_ANGLE_MAX_DEG )
+   {
+      l_alpha = K_MK_PONG_ANGLE_MAX_DEG;
    }
 
    /* Sinon */
@@ -167,50 +193,18 @@ static void mk_pong_setDelta ( T_mkPongApplication* p_pong, T_mkPongPlayer* p_pl
       /* Ne rien faire */
    }
 
-   /* Si l'angle alpha est trop faible */
-   if ( l_alpha < 22.5f )
-   {
-      /* On limite les angles trop faible pour ne pas avoir une variation 'dy' trop importante */
-      l_alpha = 22.5f;
-   }
+   /* Conversion en radians */
+   l_alpha = ( l_alpha * g_mkPi ) / 180.0f;
 
-   /* Sinon si l'angle alpha est trop important */
-   else if ( l_alpha > 67.5f )
-   {
-      /* On limite les angles trop important pour ne pas avoir une variation 'dy' trop importante */
-      l_alpha = 67.5f;
-   }
+   /* Conservation de la norme + recalcul du vecteur */
+   l_mag = _math_vsqrt ( ( p_pong->playground.ball.dx * p_pong->playground.ball.dx ) +
+        ( p_pong->playground.ball.dy * p_pong->playground.ball.dy )
+   );
 
-   /* Sinon */
-   else
-   {
-      /* Ne rien faire */
-   }
+   /* Nouveau vecteur direction (norme = l_mag, angle = l_alpha) */
+   p_pong->playground.ball.dx = p_dxSign  * l_mag * _math_fcos ( l_alpha );
+   p_pong->playground.ball.dy = l_dySign  * l_mag * _math_fsin ( l_alpha );
 
-   /* Conversion de l'angle en radian */
-   l_alpha = ( l_alpha * g_mkPi ) / 180;
-
-   /* Détermination de la valeur de l'hypoténuse du triangle rectangle */
-   l_hypothenuse = _math_vabs ( p_pong->playground.ball.dx ) / _math_fcos ( l_alpha );
-
-   /* Détermination de la nouvelle variation selon l'axe 'y' */
-   p_pong->playground.ball.dy = l_multiplier * _math_vsqrt ( ( l_hypothenuse * l_hypothenuse ) - ( p_pong->playground.ball.dx * p_pong->playground.ball.dx ) );
-
-   /* Si la position de la balle est dans la plage de jeu */
-   if ( ( p_pong->playground.ball.position.x > p_pong->playground.j2.racket.x ) &&
-        ( p_pong->playground.ball.position.x < p_pong->playground.j1.racket.x ) )
-   {
-      /* Inversion du coefficient directeur dx */
-      p_pong->playground.ball.dx = -p_pong->playground.ball.dx ;
-   }
-
-   /* Sinon */
-   else
-   {
-      /* Ne rien faire, la balle ne peut pas être renvoyée de l'autre coté */
-   }
-
-   /* Retour */
    return;
 }
 
@@ -222,31 +216,41 @@ static void mk_pong_setDelta ( T_mkPongApplication* p_pong, T_mkPongPlayer* p_pl
 
 static void mk_pong_setBallPosition ( T_mkPongApplication* p_pong, uint32_t p_frameNumber )
 {
-   /* Détermination de la valeur de la prochaine position */
-   mk_vect2d_setCoord ( &p_pong->playground.ball.position,
-                        p_pong->playground.ball.position.x + ( p_pong->playground.ball.dx * p_pong->playground.ball.speed ),
-                        p_pong->playground.ball.position.y + ( p_pong->playground.ball.dy * p_pong->playground.ball.speed ) );
+   /* On considère le SEGMENT parcouru par la balle entre t=0 et t=1 (une frame). */
+   /* On vérifie si ce segment franchit le plan x de la raquette. */
+   /* Si oui, on calcule le paramètre t ∈ [0,1] exact du croisement, */
+   /* on en déduit la position Y précise à cet instant, et on gère le rebond */
+   /* à la position d'impact réelle plutôt qu'à la position d'arrivée. */
+   
+   float32_t l_prevX, l_prevY;    /* Position de la balle en début de frame        */
+   float32_t l_nextX, l_nextY;    /* Position de la balle en fin de frame          */
+   float32_t l_vx,    l_vy;       /* Déplacement réel cette frame (dx × speed)     */
+   float32_t l_t;                 /* Paramètre d'interpolation ∈ [0 ; 1]           */
+   float32_t l_impactY;           /* Centre Y de la balle au moment du contact     */
+   float32_t l_j1BorderX;         /* Bord gauche de la raquette J1 (droite)        */
+   float32_t l_j2BorderX;         /* Bord droit  de la raquette J2 (gauche)        */
 
-   /* Si la bordure haute a été touchée */
-   if ( p_pong->playground.ball.position.y <= K_MK_PONG_BORDER_HEIGHT )
+   /* Vecteur déplacement réel pour cette frame */
+   l_vx = p_pong->playground.ball.dx * p_pong->playground.ball.speed;
+   l_vy = p_pong->playground.ball.dy * p_pong->playground.ball.speed;
+
+   l_prevX = p_pong->playground.ball.position.x;
+   l_prevY = p_pong->playground.ball.position.y;
+   l_nextX = l_prevX + l_vx;
+   l_nextY = l_prevY + l_vy;
+
+   /* Si colision avec le bord haut*/
+   if ( l_nextY <= ( float32_t ) K_MK_PONG_BORDER_HEIGHT )
    {
-      /* Actualisation des coordonnées */
-      mk_vect2d_setCoord ( &p_pong->playground.ball.position,
-                           p_pong->playground.ball.position.x, K_MK_PONG_BORDER_HEIGHT );
-
-      /* Inversion du coefficient directeur dy */
-      p_pong->playground.ball.dy = -p_pong->playground.ball.dy ;
+      l_nextY = ( float32_t ) K_MK_PONG_BORDER_HEIGHT;
+      p_pong->playground.ball.dy = -p_pong->playground.ball.dy;
    }
 
-   /* Sinon si la bordure basse a été touchée */
-   else if ( ( p_pong->playground.ball.position.y + K_MK_PONG_BALL_WIDTH ) >= ( float32_t ) ( mk_display_getHeight ( ) - K_MK_PONG_BORDER_HEIGHT ) )
+   /* Sinon si colision avec le bord bas */
+   else if ( ( l_nextY + K_MK_PONG_BALL_WIDTH ) >= ( float32_t ) ( mk_display_getHeight ( ) - K_MK_PONG_BORDER_HEIGHT ) )
    {
-      /* Actualisation des coordonnées */
-      mk_vect2d_setCoord ( &p_pong->playground.ball.position,
-                           p_pong->playground.ball.position.x, ( float32_t ) ( mk_display_getHeight ( ) - K_MK_PONG_BORDER_HEIGHT - K_MK_PONG_BALL_WIDTH ) );
-
-      /* Inversion du coefficient directeur dy */
-      p_pong->playground.ball.dy = -p_pong->playground.ball.dy ;
+      l_nextY = ( float32_t ) ( mk_display_getHeight ( ) - K_MK_PONG_BORDER_HEIGHT - K_MK_PONG_BALL_WIDTH );
+      p_pong->playground.ball.dy = -p_pong->playground.ball.dy;
    }
 
    /* Sinon */
@@ -255,31 +259,95 @@ static void mk_pong_setBallPosition ( T_mkPongApplication* p_pong, uint32_t p_fr
       /* Ne rien faire */
    }
 
-   /* Si la raquette du joueur 2 a été touchée */
-   if ( ( p_pong->playground.ball.position.x <= ( p_pong->playground.j2.racket.x + K_MK_PONG_RACKET_WIDTH ) ) &&
-        ( ( p_pong->playground.ball.position.y + K_MK_PONG_BALL_WIDTH ) >= p_pong->playground.j2.racket.y ) &&
-        ( p_pong->playground.ball.position.y <= ( p_pong->playground.j2.racket.y + K_MK_PONG_RACKET_HEIGHT ) ) )
-   {
-      /* Détermination de la nouvelle valeur de la variation 'dy' */
-      mk_pong_setDelta ( p_pong, &p_pong->playground.j2 );
+   /* Raquette du joueur 1 (bord droit de l'écran) */
 
-      /* Mise à jour de la vitesse de la balle */
-      mk_pong_setSpeed ( p_pong );
+   /* La balle va vers la droite (l_vx > 0). */
+   /* Son bord droit (prevX + BALL_WIDTH) était encore AVANT la raquette. */
+   /* Son bord droit (nextX + BALL_WIDTH) a franchi ou atteint la raquette. */
+   
+   /* Paramètre d'interpolation : */
+   /*   t = distance_à_franchir / déplacement_total */
+   /*     = (l_j1BorderX − (prevX + BALL_WIDTH)) / l_vx */
+   
+   /* Position Y au moment du contact : */
+   /*   impactY = prevY + t × l_vy   (centre de la balle) */
+   
+   /* Condition de rebond : impactY dans la hauteur de la raquette. */
+   /* Si la balle rate la raquette, elle continue et un point est comptabilisé. */
+   l_j1BorderX = p_pong->playground.j1.racket.x;
+
+   /* Condition de collision avec la raquette du joueur 1 */
+   if ( ( l_vx > 0.0f ) && ( ( l_prevX + K_MK_PONG_BALL_WIDTH ) < l_j1BorderX ) && ( ( l_nextX + K_MK_PONG_BALL_WIDTH ) >= l_j1BorderX ) )
+   {
+      /* Instant précis du contact (interpolation linéaire) */
+      l_t       = ( l_j1BorderX - ( l_prevX + K_MK_PONG_BALL_WIDTH ) ) / l_vx;
+      l_impactY = l_prevY + l_t * l_vy + ( ( float32_t ) K_MK_PONG_BALL_WIDTH / 2.0f );
+
+      /* Condition de rebond */
+      if ( ( l_impactY >= p_pong->playground.j1.racket.y ) &&
+           ( l_impactY <= ( p_pong->playground.j1.racket.y + ( float32_t ) K_MK_PONG_RACKET_HEIGHT ) ) )
+      {
+         /* Rebond : la balle repart vers la gauche (dx < 0) */
+         mk_pong_handleRacketBounce ( p_pong, &p_pong->playground.j1, l_impactY, -1.0f );
+         mk_pong_setSpeed ( p_pong );
+
+         /* Reposition au bord exact pour éviter toute pénétration résiduelle */
+         l_nextX = l_j1BorderX - ( float32_t ) K_MK_PONG_BALL_WIDTH;
+      }
+
+      /* Sinon */
+      else
+      {
+         /* Ne rien faire */
+      }
    }
 
-   /* Sinon si la raquette du joueur 1 a été touchée */
-   else if ( ( ( p_pong->playground.ball.position.x + K_MK_PONG_BALL_WIDTH ) >= p_pong->playground.j1.racket.x ) &&
-        ( ( p_pong->playground.ball.position.y + K_MK_PONG_BALL_WIDTH ) >= p_pong->playground.j1.racket.y ) &&
-        ( p_pong->playground.ball.position.y <= ( p_pong->playground.j1.racket.y + K_MK_PONG_RACKET_HEIGHT ) ) )
+   /* Sinon */
+   else
    {
-      /* Détermination de la nouvelle valeur de la variation 'dy' */
-      mk_pong_setDelta ( p_pong, &p_pong->playground.j1 );
-
-      /* Mise à jour de la vitesse de la balle */
-      mk_pong_setSpeed ( p_pong );
+      /* Ne rien faire */
    }
 
-   /* Dans certaine situation, la balle peut passer derrière la raquette. */
+   /* Raquette du joueur 2 (bord gauche de l'écran) */
+
+   /* La balle va vers la gauche (l_vx < 0). */
+   /* Son bord gauche (prevX) était encore APRÈS le bord droit de la raquette. */
+   /* Son bord gauche (nextX) a franchi ou atteint ce bord droit. */
+   l_j2BorderX = p_pong->playground.j2.racket.x + ( float32_t ) K_MK_PONG_RACKET_WIDTH;
+
+   /* Condition de collision avec la raquette du joueur 2 */
+   if ( ( l_vx < 0.0f ) && ( l_prevX > l_j2BorderX ) && ( l_nextX <= l_j2BorderX ) )
+   {
+      l_t = ( l_prevX - l_j2BorderX ) / ( -l_vx );
+      l_impactY = l_prevY + l_t * l_vy + ( ( float32_t ) K_MK_PONG_BALL_WIDTH / 2.0f );
+
+      /* Condition de rebond */
+      if ( ( l_impactY >= p_pong->playground.j2.racket.y ) &&
+           ( l_impactY <= ( p_pong->playground.j2.racket.y + ( float32_t ) K_MK_PONG_RACKET_HEIGHT ) ) )
+      {
+         /* Rebond : la balle repart vers la droite (dx > 0) */
+         mk_pong_handleRacketBounce ( p_pong, &p_pong->playground.j2, l_impactY, 1.0f );
+         mk_pong_setSpeed ( p_pong );
+
+         l_nextX = l_j2BorderX;
+      }
+
+      /* Sinon */
+      else
+      {
+         /* Ne rien faire */
+      }
+   }
+
+   /* Sinon */
+   else
+   {
+      /* Ne rien faire */
+   }
+
+   /* Mise à jour de la position finale */
+   mk_vect2d_setCoord ( &p_pong->playground.ball.position, l_nextX, l_nextY );
+
    /* Si le joueur 1 a marqué un point */
    if ( p_pong->playground.ball.position.x <= 0 )
    {
