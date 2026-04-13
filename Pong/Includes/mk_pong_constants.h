@@ -343,7 +343,7 @@
  *        de la position de la raquette du J2.
  */
 
-#define K_MK_PONG_RACKET_THRESHOLD 15
+#define K_MK_PONG_RACKET_THRESHOLD 50
 
 /**
  *
@@ -355,6 +355,44 @@
  */
 
 #define K_MK_PONG_DEAD_ZONE_HEIGHT 0
+
+/**
+ *
+ */
+
+/**
+ * @def K_MK_PONG_AI_RACKET_DELTA
+ * @brief Définition du déplacement de la raquette IA par frame [en pxl].
+ *        Contrairement au joueur humain qui déplace sa raquette par événement
+ *        clavier (toutes les 10 frames environ), l'IA se déplace à chaque frame.
+ *        Cette valeur doit donc être environ 10 fois plus faible que
+ *        K_MK_PONG_RACKET_STEP pour que les deux joueurs aient une vitesse
+ *        effective comparable.
+ */
+
+#define K_MK_PONG_AI_RACKET_DELTA 4.0f
+
+/**
+ *
+ */
+
+/**
+ * @def K_MK_PONG_AI_ERROR_RANGE
+ * @brief Définition de l'amplitude maximale de l'erreur de prédiction
+ *        de l'IA [en pxl]. L'erreur est tirée aléatoirement dans
+ *        [-K_MK_PONG_AI_ERROR_RANGE ; +K_MK_PONG_AI_ERROR_RANGE].
+ */
+
+#define K_MK_PONG_AI_ERROR_RANGE 40.0f
+
+/**
+ * @def K_MK_PONG_AI_DEMO_NOISE
+ * @brief Définition de l'amplitude du bruit aléatoire ajouté à chaque frame
+ *        en mode démo [en pxl]. Ce bruit empêche les deux IAs de produire
+ *        une trajectoire périodique infinie en cassant la symétrie des échanges.
+ */
+
+#define K_MK_PONG_AI_DEMO_NOISE 3.0f
 
 /**
  *
@@ -416,7 +454,7 @@
  * @brief Définition de la vitesse max de la balle.
  */
 
-#define K_MK_PONG_BALL_MAX_SPEED 3.5f
+#define K_MK_PONG_BALL_MAX_SPEED 4.5f
 
 /**
  *

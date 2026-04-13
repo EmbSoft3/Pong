@@ -59,6 +59,9 @@ struct T_mkPongPlayer
    uint8_t intScore;
    uint8_t strScore [ 3 ];
    float32_t delta;
+   float32_t aiTargetY;
+   float32_t aiError;
+   uint32_t aiErrorSet;
 };
 
 /**

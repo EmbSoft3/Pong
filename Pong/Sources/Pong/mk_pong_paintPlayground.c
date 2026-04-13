@@ -244,6 +244,9 @@ static void mk_pong_setBallPosition ( T_mkPongApplication* p_pong, uint32_t p_fr
    {
       l_nextY = ( float32_t ) K_MK_PONG_BORDER_HEIGHT;
       p_pong->playground.ball.dy = -p_pong->playground.ball.dy;
+
+      /* Mise à jour de l_vy pour que le calcul d'impactY raquette soit correct */
+      l_vy = -l_vy;
    }
 
    /* Sinon si colision avec le bord bas */
@@ -251,6 +254,9 @@ static void mk_pong_setBallPosition ( T_mkPongApplication* p_pong, uint32_t p_fr
    {
       l_nextY = ( float32_t ) ( mk_display_getHeight ( ) - K_MK_PONG_BORDER_HEIGHT - K_MK_PONG_BALL_WIDTH );
       p_pong->playground.ball.dy = -p_pong->playground.ball.dy;
+
+      /* Mise à jour de l_vy pour que le calcul d'impactY raquette soit correct */
+      l_vy = -l_vy;
    }
 
    /* Sinon */
@@ -348,6 +354,51 @@ static void mk_pong_setBallPosition ( T_mkPongApplication* p_pong, uint32_t p_fr
    /* Mise à jour de la position finale */
    mk_vect2d_setCoord ( &p_pong->playground.ball.position, l_nextX, l_nextY );
 
+   /* Filet de sécurité : détection de pénétration résiduelle dans la raquette J1 */
+   /* Couvre les cas non interceptés par la CCD (angle rasant, rebond mural simultané) */
+   if ( ( p_pong->playground.ball.dx > 0.0f ) &&
+        ( ( p_pong->playground.ball.position.x + K_MK_PONG_BALL_WIDTH ) > p_pong->playground.j1.racket.x ) &&
+        ( p_pong->playground.ball.position.x < ( p_pong->playground.j1.racket.x + ( float32_t ) K_MK_PONG_RACKET_WIDTH ) ) &&
+        ( ( p_pong->playground.ball.position.y + K_MK_PONG_BALL_WIDTH ) > p_pong->playground.j1.racket.y ) &&
+        ( p_pong->playground.ball.position.y < ( p_pong->playground.j1.racket.y + ( float32_t ) K_MK_PONG_RACKET_HEIGHT ) ) )
+   {
+      /* Éjection hors de la raquette */
+      p_pong->playground.ball.position.x = p_pong->playground.j1.racket.x - ( float32_t ) K_MK_PONG_BALL_WIDTH;
+
+      /* Rebond avec calcul d'angle sur la position courante */
+      l_impactY = p_pong->playground.ball.position.y + ( ( float32_t ) K_MK_PONG_BALL_WIDTH / 2.0f );
+      mk_pong_handleRacketBounce ( p_pong, &p_pong->playground.j1, l_impactY, -1.0f );
+      mk_pong_setSpeed ( p_pong );
+   }
+
+   /* Sinon */
+   else
+   {
+      /* Ne rien faire */
+   }
+
+   /* Filet de sécurité : détection de pénétration résiduelle dans la raquette J2 */
+   if ( ( p_pong->playground.ball.dx < 0.0f ) &&
+        ( ( p_pong->playground.ball.position.x + K_MK_PONG_BALL_WIDTH ) > p_pong->playground.j2.racket.x ) &&
+        ( p_pong->playground.ball.position.x < ( p_pong->playground.j2.racket.x + ( float32_t ) K_MK_PONG_RACKET_WIDTH ) ) &&
+        ( ( p_pong->playground.ball.position.y + K_MK_PONG_BALL_WIDTH ) > p_pong->playground.j2.racket.y ) &&
+        ( p_pong->playground.ball.position.y < ( p_pong->playground.j2.racket.y + ( float32_t ) K_MK_PONG_RACKET_HEIGHT ) ) )
+   {
+      /* Éjection hors de la raquette */
+      p_pong->playground.ball.position.x = p_pong->playground.j2.racket.x + ( float32_t ) K_MK_PONG_RACKET_WIDTH;
+
+      /* Rebond avec calcul d'angle sur la position courante */
+      l_impactY = p_pong->playground.ball.position.y + ( ( float32_t ) K_MK_PONG_BALL_WIDTH / 2.0f );
+      mk_pong_handleRacketBounce ( p_pong, &p_pong->playground.j2, l_impactY, 1.0f );
+      mk_pong_setSpeed ( p_pong );
+   }
+
+   /* Sinon */
+   else
+   {
+      /* Ne rien faire */
+   }
+
    /* Si le joueur 1 a marqué un point */
    if ( p_pong->playground.ball.position.x <= 0 )
    {
@@ -387,43 +438,299 @@ static void mk_pong_setBallPosition ( T_mkPongApplication* p_pong, uint32_t p_fr
  * @endinternal
  */
 
+static float32_t mk_pong_predictBallY ( T_mkPongApplication* p_pong, float32_t p_targetX )
+{
+   /* Position courante et direction de la balle */
+   float32_t l_x      = p_pong->playground.ball.position.x;
+   float32_t l_y      = p_pong->playground.ball.position.y + ( ( float32_t ) K_MK_PONG_BALL_WIDTH / 2.0f );
+   float32_t l_dx     = p_pong->playground.ball.dx;
+   float32_t l_dy     = p_pong->playground.ball.dy;
+
+   /* Limites verticales de la zone de jeu */
+   float32_t l_yMin   = ( float32_t ) ( K_MK_PONG_BORDER_HEIGHT + K_MK_PONG_BALL_WIDTH );
+   float32_t l_yMax   = ( float32_t ) ( mk_display_getHeight ( ) - K_MK_PONG_BORDER_HEIGHT - K_MK_PONG_BALL_WIDTH );
+   float32_t l_height = l_yMax - l_yMin;
+
+   float32_t l_distX;
+   float32_t l_distY;
+   float32_t l_cycles;
+   float32_t l_remainder;
+   float32_t l_predictedY;
+   uint32_t  l_nCycles;
+
+   /* Distance X restante jusqu'au plan de la raquette */
+   /* Balle allant vers la gauche (J2) : distance = x_balle - x_cible */
+   /* Balle allant vers la droite (J1) : distance = x_cible - x_balle */
+   if ( l_dx < 0.0f )
+   {
+      l_distX = l_x - p_targetX;
+   }
+
+   /* Sinon */
+   else
+   {
+      l_distX = p_targetX - l_x;
+   }
+
+   /* Si la balle s'éloigne du plan cible ou y est déjà, l'IA attend au centre */
+   if ( l_distX <= 0.0f )
+   {
+      /* Retour au centre */
+      return ( float32_t ) ( mk_display_getHeight ( ) >> 1 );
+   }
+
+   /* Sinon */
+   else
+   {
+      /* Ne rien faire */
+   }
+
+   /* Déplacement Y total sur ce trajet (ratio |dy/dx| × distX) */
+   l_distY = _math_vabs ( l_dy / l_dx ) * l_distX;
+
+   /* Normalisation de la position Y selon la direction initiale */
+   if ( l_dy > 0.0f )
+   {
+      l_y = l_y - l_yMin;
+   }
+
+   /* Sinon */
+   else
+   {
+      l_y = l_yMax - l_y;
+   }
+
+   /* Décomposition en demi-cycles de hauteur l_height */
+   if ( l_height > 0.0f )
+   {
+      l_cycles    = l_distY / l_height;
+      l_nCycles   = ( uint32_t ) l_cycles;
+      l_remainder = l_distY - ( ( float32_t ) l_nCycles * l_height );
+   }
+
+   /* Sinon */
+   else
+   {
+      l_remainder = 0.0f;
+      l_nCycles   = 0;
+   }
+
+   /* Propagation de la position Y sur le terrain replié */
+   l_predictedY = l_y + l_remainder;
+
+   /* Si on dépasse le bord, on replie */
+   if ( l_predictedY > l_height )
+   {
+      l_predictedY = 2.0f * l_height - l_predictedY;
+   }
+
+   /* Sinon */
+   else
+   {
+      /* Ne rien faire */
+   }
+
+   /* Restitution dans le repère réel selon la parité des demi-cycles */
+   if ( ( l_nCycles % 2 ) == 0 )
+   {
+      if ( l_dy > 0.0f )
+      {
+         l_predictedY = l_yMin + l_predictedY;
+      }
+
+      /* Sinon */
+      else
+      {
+         l_predictedY = l_yMax - l_predictedY;
+      }
+   }
+
+   /* Sinon */
+   else
+   {
+      if ( l_dy > 0.0f )
+      {
+         l_predictedY = l_yMax - l_predictedY;
+      }
+
+      /* Sinon */
+      else
+      {
+         l_predictedY = l_yMin + l_predictedY;
+      }
+   }
+
+   /* Retour */
+   return l_predictedY;
+}
+
+/**
+ * @internal
+ * @brief
+ * @endinternal
+ */
+
 static void mk_pong_setRacketPosition ( T_mkPongApplication* p_pong, T_mkPongPlayer* p_player, uint32_t p_frameNumber )
 {
-   /* A chaque frame, on actualise la position verticale de la raquette afin de suivre la balle */
-   float32_t l_deltaY = ( p_pong->playground.ball.position.y + ( K_MK_PONG_BALL_WIDTH >> 1 ) ) - ( p_player->racket.y + ( K_MK_PONG_RACKET_HEIGHT >> 1 ) );
+   float32_t l_racketCenterY;   /* Centre actuel de la raquette */
+   float32_t l_targetCenterY;   /* Centre visé (prédiction + erreur) */
+   float32_t l_deltaY;          /* Ecart entre centre actuel et cible */
+   float32_t l_screenCenterY;   /* Centre de l'écran (position de repos) */
+   float32_t l_halfW;           /* Moitié de la largeur de l'écran */
+   float32_t l_targetX;         /* Plan X de la raquette côté contact */
+   float32_t l_randomFloat;
+   uint32_t  l_randomValue;
+   uint32_t  l_ballApproaching; /* 1 si la balle se dirige vers cette raquette */
+   uint32_t  l_ballInOwnHalf;   /* 1 si la balle est dans la moitié de cette raquette */
 
-   /* Si la position de la balle sur l'axe 'Y' est supérieure au centre de la raquette */
-   if ( l_deltaY > K_MK_PONG_RACKET_THRESHOLD )
+   l_racketCenterY = p_player->racket.y + ( ( float32_t ) K_MK_PONG_RACKET_HEIGHT / 2.0f );
+   l_screenCenterY = ( float32_t ) ( mk_display_getHeight ( ) >> 1 );
+   l_halfW         = ( float32_t ) ( mk_display_getWidth  ( ) >> 1 );
+
+   /* Détermination du côté de la raquette */
+   /* J1 est à droite (racket.x > halfW) : la balle approche quand dx > 0 */
+   /* J2 est à gauche (racket.x < halfW) : la balle approche quand dx < 0 */
+   if ( p_player->racket.x > l_halfW )
    {
-      /* Si la position de la raquette peut être décalée vers le haut */
+      /* Raquette J1 (droite) */
+      l_targetX        = p_player->racket.x;
+      l_ballApproaching = ( p_pong->playground.ball.dx > 0.0f ) ? 1u : 0u;
+      l_ballInOwnHalf  = ( p_pong->playground.ball.position.x > l_halfW ) ? 1u : 0u;
+   }
+
+   /* Sinon */
+   else
+   {
+      /* Raquette J2 (gauche) */
+      l_targetX        = p_player->racket.x + ( float32_t ) K_MK_PONG_RACKET_WIDTH;
+      l_ballApproaching = ( p_pong->playground.ball.dx < 0.0f ) ? 1u : 0u;
+      l_ballInOwnHalf  = ( p_pong->playground.ball.position.x < l_halfW ) ? 1u : 0u;
+   }
+
+   /* Si la balle s'éloigne, l'IA se replace au centre */
+   if ( l_ballApproaching == 0u )
+   {
+      /* Réinitialisation de la cible et de l'erreur */
+      p_player->aiTargetY  = l_screenCenterY;
+      p_player->aiError    = 0.0f;
+      p_player->aiErrorSet = 0;
+
+      l_targetCenterY = l_screenCenterY;
+   }
+
+   /* Sinon la balle approche */
+   else
+   {
+      /* Si la balle est encore dans la moitié adverse */
+      if ( l_ballInOwnHalf == 0u )
+      {
+         /* Prédiction anticipée sans erreur encore figée */
+         p_player->aiTargetY = mk_pong_predictBallY ( p_pong, l_targetX );
+         p_player->aiError   = 0.0f;
+      }
+
+      /* Sinon la balle est dans la moitié IA */
+      else
+      {
+         /* Si l'erreur n'a pas encore été tirée pour cet échange */
+         if ( p_player->aiErrorSet == 0 )
+         {
+            /* Prédiction finale */
+            p_player->aiTargetY = mk_pong_predictBallY ( p_pong, l_targetX );
+
+            /* Tirage de l'erreur aléatoire dans [-AI_ERROR_RANGE ; +AI_ERROR_RANGE] */
+            ( void ) mk_utils_rand ( &l_randomValue );
+            l_randomFloat = ( ( float32_t ) l_randomValue / ( float32_t ) 0xFFFFFFFF )
+                          * ( 2.0f * K_MK_PONG_AI_ERROR_RANGE ) - K_MK_PONG_AI_ERROR_RANGE;
+
+            /* Application de l'erreur */
+            p_player->aiError    = l_randomFloat;
+            p_player->aiErrorSet = 1;
+            p_player->aiTargetY  = p_player->aiTargetY + p_player->aiError;
+
+            /* Clampage de la cible dans les limites du terrain */
+            if ( p_player->aiTargetY < ( float32_t ) ( K_MK_PONG_BORDER_HEIGHT + K_MK_PONG_DEAD_ZONE_HEIGHT + ( K_MK_PONG_RACKET_HEIGHT >> 1 ) ) )
+            {
+               p_player->aiTargetY = ( float32_t ) ( K_MK_PONG_BORDER_HEIGHT + K_MK_PONG_DEAD_ZONE_HEIGHT + ( K_MK_PONG_RACKET_HEIGHT >> 1 ) );
+            }
+
+            /* Sinon */
+            else if ( p_player->aiTargetY > ( float32_t ) ( mk_display_getHeight ( ) - K_MK_PONG_BORDER_HEIGHT - K_MK_PONG_DEAD_ZONE_HEIGHT - ( K_MK_PONG_RACKET_HEIGHT >> 1 ) ) )
+            {
+               p_player->aiTargetY = ( float32_t ) ( mk_display_getHeight ( ) - K_MK_PONG_BORDER_HEIGHT - K_MK_PONG_DEAD_ZONE_HEIGHT - ( K_MK_PONG_RACKET_HEIGHT >> 1 ) );
+            }
+
+            /* Sinon */
+            else
+            {
+               /* Ne rien faire */
+            }
+         }
+
+         /* Sinon */
+         else
+         {
+            /* Ne rien faire, l'erreur est déjà figée pour cet échange */
+         }
+      }
+
+      l_targetCenterY = p_player->aiTargetY;
+   }
+
+   /* En mode démo, ajout d'un bruit aléatoire par frame sur la cible */
+   /* Ce bruit casse les trajectoires périodiques infinies que produisent */
+   /* deux IAs parfaitement symétriques qui se renvoient la balle en boucle. */
+   if ( ( l_ballApproaching == 1u ) && ( p_pong->playground.mode == K_MK_PONG_MODE_DEMO ) )
+   {
+      /* Tirage d'un bruit dans [-AI_DEMO_NOISE ; +AI_DEMO_NOISE] */
+      ( void ) mk_utils_rand ( &l_randomValue );
+      l_randomFloat = ( ( float32_t ) l_randomValue / ( float32_t ) 0xFFFFFFFF )
+                    * ( 2.0f * K_MK_PONG_AI_DEMO_NOISE ) - K_MK_PONG_AI_DEMO_NOISE;
+
+      l_targetCenterY = l_targetCenterY + l_randomFloat;
+   }
+
+   /* Sinon */
+   else
+   {
+      /* Ne rien faire */
+   }
+
+   /* Déplacement de la raquette vers la cible */
+   l_deltaY = l_targetCenterY - l_racketCenterY;
+
+   /* Si la position de la cible est supérieure au centre de la raquette */
+   if ( l_deltaY > ( float32_t ) K_MK_PONG_RACKET_THRESHOLD )
+   {
+      /* Si la position de la raquette peut être décalée vers le bas */
       if ( p_player->racket.y < ( float32_t ) ( mk_display_getHeight ( ) - K_MK_PONG_BORDER_HEIGHT - K_MK_PONG_RACKET_HEIGHT - K_MK_PONG_DEAD_ZONE_HEIGHT ) - p_player->delta )
       {
-         /* Déplacement de la raquette vers le haut */
+         /* Déplacement de la raquette vers le bas */
          p_player->racket.y += p_player->delta;
       }
 
       /* Sinon */
       else
       {
-         /* Déplacement de la raquette en position min  */
+         /* Déplacement de la raquette en position min */
          p_player->racket.y = ( float32_t ) ( mk_display_getHeight ( ) - K_MK_PONG_BORDER_HEIGHT - K_MK_PONG_RACKET_HEIGHT - K_MK_PONG_DEAD_ZONE_HEIGHT );
       }
    }
 
-   /* Sinon si la position de la balle sur l'axe 'Y' est inférieure au centre de la raquette */
-   else if ( l_deltaY < ( -K_MK_PONG_RACKET_THRESHOLD ) )
+   /* Sinon si la position de la cible est inférieure au centre de la raquette */
+   else if ( l_deltaY < -( float32_t ) K_MK_PONG_RACKET_THRESHOLD )
    {
       /* Si la position de la raquette peut être décalée vers le haut */
-      if ( p_player->racket.y > ( K_MK_PONG_BORDER_HEIGHT + K_MK_PONG_DEAD_ZONE_HEIGHT + p_player->delta ) )
+      if ( p_player->racket.y > ( float32_t ) ( K_MK_PONG_BORDER_HEIGHT + K_MK_PONG_DEAD_ZONE_HEIGHT ) + p_player->delta )
       {
-         /* Déplacement de la raquette vers le bas */
+         /* Déplacement de la raquette vers le haut */
          p_player->racket.y -= p_player->delta;
       }
 
       /* Sinon */
       else
       {
-         /* Déplacement de la raquette en position max  */
+         /* Déplacement de la raquette en position max */
          p_player->racket.y = ( float32_t ) ( K_MK_PONG_BORDER_HEIGHT + K_MK_PONG_DEAD_ZONE_HEIGHT );
       }
    }

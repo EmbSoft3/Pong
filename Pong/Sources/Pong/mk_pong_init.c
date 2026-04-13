@@ -1,6 +1,6 @@
 /**
 *
-* @copyright Mk - Copyright (C) 2017-2019 RENARD Mathieu.
+* @copyright Mk - Copyright (C) 2017-2026 RENARD Mathieu.
 *
 * This file is part of Mk.
 *

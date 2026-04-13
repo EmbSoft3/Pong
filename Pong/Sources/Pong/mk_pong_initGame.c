@@ -51,9 +51,21 @@ void mk_pong_initGames ( T_mkPongApplication* p_pong )
    p_pong->playground.j1.intScore = 0;
    p_pong->playground.j1.strScore [ 0 ] = '\0';
    p_pong->playground.j1.delta = K_MK_PONG_RACKET_STEP;
+
    p_pong->playground.j2.intScore = 0;
    p_pong->playground.j2.strScore [ 0 ] = '\0';
-   p_pong->playground.j2.delta = K_MK_PONG_RACKET_STEP;
+
+   /* L'IA déplace sa raquette à chaque frame : son delta doit être plus faible */
+   /* que celui du joueur humain qui, lui, se déplace par événement clavier. */
+   p_pong->playground.j2.delta = K_MK_PONG_AI_RACKET_DELTA;
+
+   /* Réinitialisation de l'état interne de l'IA pour la nouvelle partie */
+   p_pong->playground.j1.aiTargetY  = 0.0f;
+   p_pong->playground.j1.aiError    = 0.0f;
+   p_pong->playground.j1.aiErrorSet = 0;
+   p_pong->playground.j2.aiTargetY  = 0.0f;
+   p_pong->playground.j2.aiError    = 0.0f;
+   p_pong->playground.j2.aiErrorSet = 0;
 
    /* Initialisation des buffers des boites de texte */
    mk_textField_setText ( &p_pong->background.scoreJ1, p_pong->playground.j1.strScore );
