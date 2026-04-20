@@ -131,7 +131,7 @@ load address using `add-symbol-file`.
 
 Pong is the reference example for the Mk application model. For a step-by-step guide
 on how to structure your own Mk application — descriptor, entry point, event listeners,
-memory layout — see the [Mk wiki](https://github.com/EmbSoft3/Mk/wiki/Writing%E2%80%90Your%E2%80%90First%E2%80%90Application).
+memory layout — see the [Mk wiki](https://github.com/EmbSoft3/Mk/docs/Writing-Your-First-Application).
 
 ---
 
