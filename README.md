@@ -20,7 +20,7 @@ Pong is intended as a getting-started example showing how to build, install, and
 
 ## Installation
 
-Build the application (see [Build](#build) below), then copy `pongGameRelease.elf` and its
+Build the application (see [Build](#build) below), then copy `pong.elf` and its
 icon `mk_pong.bmp` to the Mk file system at:
 
 ```
@@ -34,68 +34,96 @@ in the Mk repository. Once installed, Pong appears in the Mk home screen applica
 
 ### Requirements
 
-#### All platforms
 - [GNU Arm Embedded Toolchain 10.3-2021.10](https://developer.arm.com/downloads/-/gnu-rm) — must be added to your `PATH`
-- GNU Make 4.3
-- [Mk Includes](https://github.com/EmbSoft3/Mk/tree/main/Mk/Includes)
+- CMake ≥ 3.25
+- Ninja
+- [Mk Includes](https://github.com/EmbSoft3/Mk/tree/main/Mk/Includes) — must be present at `../Mk/Mk/Includes` relative to the project root
 
-#### Windows only (one of the following)
-- [MSYS2](https://www.msys2.org/) *(recommended)* — provides `sh`, `find`, `rm` and other Unix tools required by the Makefile
-- [Git for Windows](https://git-scm.com/) — Git Bash ships the same Unix tools
+### Build system
 
-> The Makefile automatically detects MSYS2 or Git Bash at their default installation
-> paths (`C:/msys64` and `C:/Program Files/Git`). If your installation is elsewhere,
-> update `MSYS2_BIN` or `GITBASH_BIN` at the top of `Pong/Make/Makefile`.
+The project uses **CMake** with presets defined in `CMakePresets.json`:
+
+| Preset | Type | Description |
+|--------|------|-------------|
+| `release-pong` | Release | Optimised build (`-Ofast`), stripped |
+| `debug-pong` | Debug | Unoptimised build (`-O0 -g3`) with full debug symbols |
 
 ### Steps
 
-1. Clone the repository and make sure the [Mk Includes](https://github.com/EmbSoft3/Mk/tree/main/Mk/Includes) directory is present at `../../Mk/Mk/Includes` relative to the `Make` directory, or update `INCLUDES_API_PATH` in `Pong/Make/Makefile` accordingly.
+1. Make sure `arm-none-eabi-gcc` is in your `PATH`:
+   ```bash
+   arm-none-eabi-gcc --version
+   ```
 
-2. Add `arm-none-eabi-gcc` to your `PATH` (verify with `arm-none-eabi-gcc --version`).
+2. Make sure the [Mk Includes](https://github.com/EmbSoft3/Mk/tree/main/Mk/Includes) directory
+   is present at `../Mk/Mk/Includes` relative to the project root, or update `INCLUDES_API_PATH`
+   in `CMakePresets.txt` accordingly.
 
-3. Build:
+3. Configure the project using the desired preset:
+   ```bash
+   cmake --preset release-shell
+   ```
 
-```bash
-make clean
-make all        # Release build — optimised, stripped
-```
+4. Build the firmware:
+   ```bash
+   cmake --build --preset release-shell
+   ```
 
-This produces `pongGameRelease.elf`, ready to install on the target.
+   This produces in `build/release-pong/`:
+   - `pong.elf` — position-independent shared object, ready to install on the target
+   - `pong.map` — linker map file
 
-> Use the `Debug` target for a `-O0` build with full debug symbols:
+> Use the `debug-pong` preset for an unoptimised build with full debug symbols:
 > ```bash
-> make Debug
+> cmake --preset debug-shell
+> cmake --build --preset debug-shell
 > ```
 
-The application is compiled as a position-independent shared object (`-fPIC -shared`) and is relocatable into any 64 KB SDRAM page by the Mk dynamic loader.
+The application is compiled as a position-independent shared object (`-fPIC -shared`) and is
+relocatable into any 64 KB memory page by the Mk dynamic loader.
 
-### Available targets
-
-| Target    | Description                                              |
-|-----------|----------------------------------------------------------|
-| `all`     | Alias for `Release`                                      |
-| `Release` | Optimised build (`-Ofast`), stripped                     |
-| `Debug`   | Unoptimised build (`-O0`) with full debug symbols        |
-| `clean`   | Remove all generated files (`.o`, `.d`, `.su`, `.elf`, `.map`) |
-
-### Compiler versions
+### Compiler versions used
 
 | Tool | Version |
 |------|---------|
 | `arm-none-eabi-gcc` | 10.3.1 20210824 (GNU Arm Embedded Toolchain 10.3-2021.10) |
 | `arm-none-eabi-g++` | 10.3.1 20210824 (GNU Arm Embedded Toolchain 10.3-2021.10) |
-| `make` | GNU Make 4.3 |
+| CMake | ≥ 3.25 |
+| Ninja | latest |
 
 ---
 
-## Continuous Integration
+## Debugging
 
-Every push and pull request is automatically built by **GitHub Actions**.
-The workflow installs the GNU Arm Embedded Toolchain, runs `make Release`,
-and uploads `pongGameRelease.elf` as a downloadable build artifact.
+Debugging a dynamically loaded application requires a specific GDB setup because Pong is a
+position-independent shared object (`-fPIC -shared`) relocated at runtime by the Mk dynamic
+loader. GDB must be told both **which symbol file to load** and **at which address it was placed
+in memory**.
 
-The latest successful build artifact is available on the
-[Actions](../../actions) tab of this repository.
+### Requirements
+
+- A debug build of both **Mk** and **Pong** (see [Build](#build))
+- A [J-Link](https://www.segger.com/products/debug-probes/j-link/) probe
+- VSCode with the [Cortex-Debug](https://marketplace.visualstudio.com/items?itemName=marus25.cortex-debug) extension
+
+### How the load address is determined
+
+Pong is linked as a PIC shared object with a base address of `0x0`. At runtime, the Mk
+dynamic loader allocates one or more 64 KB memory pages and copies the application image into
+them. The effective load address therefore depends on which memory page the loader selected.
+
+To find the load address of a running Pong instance, inspect the Mk allocator state in the
+debugger to retrieve the base address returned to the application. This address is the value to
+pass to GDB as the symbol offset.
+
+As a reference, the example configuration uses `0xc045C000`. Adjust this value to match the
+actual allocation reported by your Mk build.
+
+### VSCode launch configuration
+
+The following [`.vscode/launch.json`](.vscode/launch.json) configuration loads Mk symbols from
+the kernel ELF (as the primary executable) and then overlays Pong symbols at the runtime
+load address using `add-symbol-file`.
 
 ---
 
@@ -103,13 +131,13 @@ The latest successful build artifact is available on the
 
 Pong is the reference example for the Mk application model. For a step-by-step guide
 on how to structure your own Mk application — descriptor, entry point, event listeners,
-memory layout — see the [Mk wiki](https://github.com/EmbSoft3/Mk/wiki/Writing%E2%80%90Your%E2%80%90First%E2%80%90Application).
+memory layout — see the [Mk wiki](https://github.com/EmbSoft3/Mk/docs/Writing-Your-First-Application).
 
 ---
 
 ## License
 
-**Copyright (C)** 2024 **RENARD Mathieu**. All rights reserved.
+**Copyright (C)** 2024-2026 **RENARD Mathieu**. All rights reserved.
 
 Mk is free software; It is distributed in the hope that it will be useful.
 There is NO warranty; not even for MERCHANTABILITY or
