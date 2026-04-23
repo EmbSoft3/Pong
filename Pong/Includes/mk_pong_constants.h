@@ -212,7 +212,7 @@
  * @brief Définition de position sur l'axe 'x' du menu principal (résolution 480x272).
  */
 
-#define K_MK_PONG_FIELD_480_272_MAIN_MENU_POSITION_X 230
+#define K_MK_PONG_FIELD_480_272_MAIN_MENU_POSITION_X 260
 
 /**
  * @def K_MK_PONG_FIELD_480_272_MAIN_MENU_POSITION_Y
@@ -226,7 +226,7 @@
  * @brief Définition de la largeur des boutons du menu (résolution 480x272).
  */
 
-#define K_MK_PONG_FIELD_480_272_MAIN_MENU_BUTTON_WIDTH 240
+#define K_MK_PONG_FIELD_480_272_MAIN_MENU_BUTTON_WIDTH 215
 
 /**
  * @def K_MK_PONG_FIELD_480_272_MAIN_MENU_BUTTON_HEIGHT
@@ -318,7 +318,7 @@
  * @brief Définition de la hauteur des raquettes [en pxl].
  */
 
-#define K_MK_PONG_RACKET_HEIGHT 64
+#define K_MK_PONG_RACKET_HEIGHT 48
 
 /**
  * @def K_MK_PONG_RACKET_OFFSET
@@ -343,7 +343,7 @@
  *        de la position de la raquette du J2.
  */
 
-#define K_MK_PONG_RACKET_THRESHOLD 50
+#define K_MK_PONG_RACKET_THRESHOLD 20
 
 /**
  *
@@ -383,7 +383,7 @@
  *        [-K_MK_PONG_AI_ERROR_RANGE ; +K_MK_PONG_AI_ERROR_RANGE].
  */
 
-#define K_MK_PONG_AI_ERROR_RANGE 40.0f
+#define K_MK_PONG_AI_ERROR_RANGE 20.0f
 
 /**
  * @def K_MK_PONG_AI_DEMO_NOISE

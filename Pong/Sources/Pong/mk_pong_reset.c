@@ -39,6 +39,14 @@ void mk_pong_reset ( T_mkPongApplication* p_pong )
    /* Déclaration d'une variable de travail */
    uint32_t l_randomValue = 0;
 
+   /* Réinitialisation de l'état interne de l'IA pour le prochain échange. */
+   p_pong->playground.j1.aiTargetY  = 0.0f;
+   p_pong->playground.j1.aiError    = 0.0f;
+   p_pong->playground.j1.aiErrorSet = 0;
+   p_pong->playground.j2.aiTargetY  = 0.0f;
+   p_pong->playground.j2.aiError    = 0.0f;
+   p_pong->playground.j2.aiErrorSet = 0;
+
    /* Initialisation de la position de la balle */
    mk_vect2d_setCoord ( &p_pong->playground.ball.position,
                         ( float32_t ) ( ( mk_display_getWidth ( ) - K_MK_PONG_BALL_WIDTH ) >> 1 ),
