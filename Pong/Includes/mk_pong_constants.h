@@ -335,7 +335,7 @@
  *        à la position de la raquette lors de l'appui sur une touche.
  */
 
-#define K_MK_PONG_RACKET_STEP 10
+#define K_MK_PONG_RACKET_STEP 5
 
 /**
  * @def K_MK_PONG_RACKET_THRESHOLD
@@ -370,7 +370,7 @@
  *        effective comparable.
  */
 
-#define K_MK_PONG_AI_RACKET_DELTA 4.0f
+#define K_MK_PONG_AI_RACKET_DELTA 2.0f
 
 /**
  *
@@ -392,7 +392,7 @@
  *        une trajectoire périodique infinie en cassant la symétrie des échanges.
  */
 
-#define K_MK_PONG_AI_DEMO_NOISE 3.0f
+#define K_MK_PONG_AI_DEMO_NOISE 5.0f
 
 /**
  *
@@ -454,7 +454,7 @@
  * @brief Définition de la vitesse max de la balle.
  */
 
-#define K_MK_PONG_BALL_MAX_SPEED 4.5f
+#define K_MK_PONG_BALL_MAX_SPEED 4.0f
 
 /**
  *
